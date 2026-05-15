@@ -3,9 +3,13 @@ package com.desafio.membermanagement.service;
 import com.desafio.membermanagement.dto.MemberRequestDTO;
 import com.desafio.membermanagement.dto.MemberResponseDTO;
 import com.desafio.membermanagement.entity.Member;
+import com.desafio.membermanagement.exception.BusinessException;
 import com.desafio.membermanagement.repository.MemberRepository;
+import com.desafio.membermanagement.util.CpfValidator;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 
 @Service
@@ -25,14 +29,15 @@ public class MemberService {
     }
 
     public MemberResponseDTO createMember(MemberRequestDTO request) {
-        String normalizedCpf = normalizeCpf(request.getCpf());
+        String normalizedCpf = CpfValidator.normalize(request.getCpf());
+        String normalizedName = request.getName().trim();
 
-        if (memberRepository.existsByCpf(normalizedCpf)) {
-            throw new IllegalArgumentException("Já existe um membro cadastrado com este CPF.");
-        }
+        validateCpf(normalizedCpf);
+        validateAge(request.getBirthDate());
+        validateDuplicatedCpf(normalizedCpf);
 
         Member member = new Member(
-                request.getName().trim(),
+                normalizedName,
                 normalizedCpf,
                 request.getBirthDate(),
                 request.getStatus()
@@ -43,7 +48,27 @@ public class MemberService {
         return MemberResponseDTO.fromEntity(savedMember);
     }
 
-    private String normalizeCpf(String cpf) {
-        return cpf.replaceAll("\\D", "");
+    private void validateCpf(String cpf) {
+        if (!CpfValidator.isValid(cpf)) {
+            throw new BusinessException("Informe um CPF válido.");
+        }
+    }
+
+    private void validateAge(LocalDate birthDate) {
+        if (birthDate.isAfter(LocalDate.now())) {
+            throw new BusinessException("Informe uma data de nascimento válida.");
+        }
+
+        int age = Period.between(birthDate, LocalDate.now()).getYears();
+
+        if (age < 18) {
+            throw new BusinessException("O membro deve ter pelo menos 18 anos.");
+        }
+    }
+
+    private void validateDuplicatedCpf(String cpf) {
+        if (memberRepository.existsByCpf(cpf)) {
+            throw new BusinessException("Já existe um membro cadastrado com este CPF.");
+        }
     }
 }
