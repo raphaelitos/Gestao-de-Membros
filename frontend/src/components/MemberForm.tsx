@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select";
 
 import type { CreateMemberRequest, MemberStatus } from "@/types/member";
-import { formatCpf, onlyDigits } from "@/utils/cpfUtils";
+import { formatCpf, isValidCpf, onlyDigits } from "@/utils/cpfUtils";
+import { isAtLeast18YearsOld } from "@/utils/dateUtils";
 
 type MemberFormProps = {
   onSubmit: (data: CreateMemberRequest) => void;
@@ -31,37 +32,50 @@ export function MemberForm({ onSubmit }: MemberFormProps) {
   }
 
   function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (!name.trim()) {
-    setError("Informe o nome do membro.");
-    return;
+    const normalizedName = name.trim();
+    const normalizedCpf = onlyDigits(cpf);
+
+    if (!normalizedName) {
+      setError("Informe o nome do membro.");
+      return;
+    }
+
+    if (!normalizedCpf) {
+      setError("Informe o CPF do membro.");
+      return;
+    }
+
+    if (!isValidCpf(normalizedCpf)) {
+      setError("Informe um CPF válido.");
+      return;
+    }
+
+    if (!birthDate) {
+      setError("Informe a data de nascimento.");
+      return;
+    }
+
+    if (!isAtLeast18YearsOld(birthDate)) {
+      setError("O membro deve ter pelo menos 18 anos.");
+      return;
+    }
+
+    setError("");
+
+    onSubmit({
+      name: normalizedName,
+      cpf: normalizedCpf,
+      birthDate,
+      status,
+    });
+
+    setName("");
+    setCpf("");
+    setBirthDate("");
+    setStatus("ACTIVE");
   }
-
-  if (!cpf.trim()) {
-    setError("Informe o CPF do membro.");
-    return;
-  }
-
-  if (!birthDate) {
-    setError("Informe a data de nascimento.");
-    return;
-  }
-
-  setError("");
-
-  onSubmit({
-    name: name.trim(),
-    cpf: onlyDigits(cpf),
-    birthDate,
-    status,
-  });
-
-  setName("");
-  setCpf("");
-  setBirthDate("");
-  setStatus("ACTIVE");
-}
 
   return (
     <Card>
@@ -95,6 +109,9 @@ export function MemberForm({ onSubmit }: MemberFormProps) {
               value={cpf}
               onChange={(event) => handleCpfChange(event.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              O CPF será salvo apenas com números.
+            </p>
           </div>
 
           <div className="space-y-2">
