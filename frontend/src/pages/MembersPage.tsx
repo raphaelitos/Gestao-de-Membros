@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { createMember, getMembers } from "@/api/memberApi";
 import { Alert } from "@/components/Alert";
 import { EmptyState } from "@/components/EmptyState";
 import { MemberForm } from "@/components/MemberForm";
 import { MemberTable } from "@/components/MemberTable";
-
 import type { CreateMemberRequest, Member } from "@/types/member";
 
 type Feedback = {
@@ -16,33 +16,75 @@ type Feedback = {
 export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(true);
+  const [isCreatingMember, setIsCreatingMember] = useState(false);
 
-  function handleCreateMember(data: CreateMemberRequest) {
-    const cpfAlreadyExists = members.some((member) => member.cpf === data.cpf);
+  async function handleCreateMember(data: CreateMemberRequest) {
+    try {
+      setIsCreatingMember(true);
+      setFeedback(null);
 
-    if (cpfAlreadyExists) {
+      const createdMember = await createMember(data);
+
+      setMembers((currentMembers) => [createdMember, ...currentMembers]);
+
+      setFeedback({
+        type: "success",
+        title: "Membro cadastrado",
+        message: "O membro foi cadastrado com sucesso.",
+      });
+    } catch (error) {
       setFeedback({
         type: "error",
-        title: "CPF duplicado",
-        message: "Já existe um membro cadastrado com este CPF.",
+        title: "Erro ao cadastrar membro",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível cadastrar o membro.",
       });
 
-      return;
+      throw error;
+    } finally {
+      setIsCreatingMember(false);
+    }
+  }
+
+  useEffect(() => {
+    let shouldUpdateState = true;
+
+    async function fetchMembers() {
+      try {
+        setIsLoadingMembers(true);
+
+        const membersFromApi = await getMembers();
+
+        if (shouldUpdateState) {
+          setMembers(membersFromApi);
+        }
+      } catch (error) {
+        if (shouldUpdateState) {
+          setFeedback({
+            type: "error",
+            title: "Erro ao carregar membros",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Não foi possível carregar os membros cadastrados.",
+          });
+        }
+      } finally {
+        if (shouldUpdateState) {
+          setIsLoadingMembers(false);
+        }
+      }
     }
 
-    const newMember: Member = {
-      id: Date.now(),
-      ...data,
+    fetchMembers();
+
+    return () => {
+      shouldUpdateState = false;
     };
-
-    setMembers((currentMembers) => [newMember, ...currentMembers]);
-
-    setFeedback({
-      type: "success",
-      title: "Membro cadastrado",
-      message: "O membro foi cadastrado com sucesso.",
-    });
-  }
+  }, []);
 
   return (
     <main className="min-h-screen bg-muted/40 px-4 py-8">
@@ -66,7 +108,10 @@ export function MembersPage() {
         )}
 
         <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-          <MemberForm onSubmit={handleCreateMember} />
+          <MemberForm
+            onSubmit={handleCreateMember}
+            isSubmitting={isCreatingMember}
+          />
 
           <section className="space-y-3">
             <div>
@@ -76,7 +121,11 @@ export function MembersPage() {
               </p>
             </div>
 
-            {members.length > 0 ? (
+            {isLoadingMembers ? (
+              <div className="rounded-md border bg-background px-6 py-10 text-center text-sm text-muted-foreground">
+                Carregando membros...
+              </div>
+            ) : members.length > 0 ? (
               <MemberTable members={members} />
             ) : (
               <EmptyState />

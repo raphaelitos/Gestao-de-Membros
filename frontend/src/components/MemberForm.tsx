@@ -17,10 +17,14 @@ import { formatCpf, isValidCpf, onlyDigits } from "@/utils/cpfUtils";
 import { isAtLeast18YearsOld } from "@/utils/dateUtils";
 
 type MemberFormProps = {
-  onSubmit: (data: CreateMemberRequest) => void;
+  onSubmit: (data: CreateMemberRequest) => Promise<void> | void;
+  isSubmitting?: boolean;
 };
 
-export function MemberForm({ onSubmit }: MemberFormProps) {
+export function MemberForm({
+  onSubmit,
+  isSubmitting = false,
+}: MemberFormProps) {
   const [name, setName] = useState("");
   const [cpf, setCpf] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -31,7 +35,7 @@ export function MemberForm({ onSubmit }: MemberFormProps) {
     setCpf(formatCpf(value));
   }
 
-  function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const normalizedName = name.trim();
@@ -64,17 +68,21 @@ export function MemberForm({ onSubmit }: MemberFormProps) {
 
     setError("");
 
-    onSubmit({
-      name: normalizedName,
-      cpf: normalizedCpf,
-      birthDate,
-      status,
-    });
+        try {
+      await onSubmit({
+        name: normalizedName,
+        cpf: normalizedCpf,
+        birthDate,
+        status,
+      });
 
-    setName("");
-    setCpf("");
-    setBirthDate("");
-    setStatus("ACTIVE");
+      setName("");
+      setCpf("");
+      setBirthDate("");
+      setStatus("ACTIVE");
+    } catch {
+      // Os campos preenchidos sao mantidos para o usuário corrigir ou tentar novamente.
+    }
   }
 
   return (
@@ -97,6 +105,7 @@ export function MemberForm({ onSubmit }: MemberFormProps) {
               id="name"
               placeholder="Ex.: João Silva"
               value={name}
+              disabled={isSubmitting}
               onChange={(event) => setName(event.target.value)}
             />
           </div>
@@ -107,6 +116,7 @@ export function MemberForm({ onSubmit }: MemberFormProps) {
               id="cpf"
               placeholder="000.000.000-00"
               value={cpf}
+              disabled={isSubmitting}
               onChange={(event) => handleCpfChange(event.target.value)}
             />
             <p className="text-xs text-muted-foreground">
@@ -120,6 +130,7 @@ export function MemberForm({ onSubmit }: MemberFormProps) {
               id="birthDate"
               type="date"
               value={birthDate}
+              disabled={isSubmitting}
               onChange={(event) => setBirthDate(event.target.value)}
             />
           </div>
@@ -128,6 +139,7 @@ export function MemberForm({ onSubmit }: MemberFormProps) {
             <Label>Status</Label>
             <Select
               value={status}
+              disabled={isSubmitting}
               onValueChange={(value) => setStatus(value as MemberStatus)}
             >
               <SelectTrigger>
@@ -141,8 +153,8 @@ export function MemberForm({ onSubmit }: MemberFormProps) {
             </Select>
           </div>
 
-          <Button type="submit" className="w-full">
-            Cadastrar
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Cadastrando..." : "Cadastrar"}
           </Button>
         </form>
       </CardContent>
