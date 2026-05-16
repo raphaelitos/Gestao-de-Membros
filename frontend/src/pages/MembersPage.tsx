@@ -113,9 +113,11 @@ export function MembersPage() {
             isSubmitting={isCreatingMember}
           />
 
-          <section className="space-y-3">
+          <section className="space-y-3" aria-labelledby="members-heading">
             <div>
-              <h2 className="text-xl font-semibold">Membros cadastrados</h2>
+              <h2 id="members-heading" className="text-xl font-semibold">
+                Membros cadastrados
+              </h2>
               <p className="text-sm text-muted-foreground">
                 Total de membros: {members.length}
               </p>
