@@ -1,17 +1,54 @@
-# Node
+# Dependencies
 node_modules/
-dist/
-.env
-.env.local
 
-# Java / Spring Boot
+# Frontend build
+dist/
+build/
+
+# Frontend cache
+.vite/
+.cache/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Java / Spring Boot / Maven
 target/
 *.class
+*.jar
+*.war
+*.ear
 
-# IDEs
+# Maven wrapper should be versioned
+!mvnw
+!mvnw.cmd
+!.mvn/
+!.mvn/wrapper/
+!.mvn/wrapper/maven-wrapper.properties
+!.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# IDEs / editors
 .vscode/
 .idea/
+*.iml
 
-# Sistema operacional
+# Operating system
 .DS_Store
 Thumbs.db
+
+# Misc
+*.swp
+*.swo
