@@ -15,12 +15,14 @@ export function Alert({ type, title, message }: AlertProps) {
     <ShadcnAlert
       className={
         type === "success"
-          ? "border-green-200 bg-green-50 text-green-800"
-          : "border-destructive/50 text-destructive"
+          ? "border-green-200 bg-green-50 text-green-900"
+          : "border-destructive/50 bg-destructive/5 text-destructive"
       }
     >
-      <AlertTitle>{title}</AlertTitle>
-      <AlertDescription>{message}</AlertDescription>
+      <AlertTitle className="font-semibold">{title}</AlertTitle>
+      <AlertDescription className="mt-1 text-sm">
+        {message}
+      </AlertDescription>
     </ShadcnAlert>
   );
 }

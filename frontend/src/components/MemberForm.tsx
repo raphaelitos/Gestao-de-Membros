@@ -86,7 +86,7 @@ export function MemberForm({
   }
 
   return (
-    <Card>
+    <Card className="border-zinc-200 bg-white shadow-sm">
       <CardHeader>
         <CardTitle>Cadastrar membro</CardTitle>
       </CardHeader>
@@ -119,9 +119,6 @@ export function MemberForm({
               disabled={isSubmitting}
               onChange={(event) => handleCpfChange(event.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              O CPF será salvo apenas com números.
-            </p>
           </div>
 
           <div className="space-y-2">

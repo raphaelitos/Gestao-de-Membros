@@ -16,7 +16,7 @@ type MemberTableProps = {
 
 export function MemberTable({ members }: MemberTableProps) {
   return (
-    <div className="overflow-x-auto rounded-md border bg-background">
+    <div className="overflow-x-auto rounded-xl border border-zinc-300 bg-white shadow-sm">
       <Table>
         <TableHeader>
           <TableRow>
